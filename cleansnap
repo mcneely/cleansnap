@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# Make sure script runs itself in sudo
+[ "$(id -u)" == "0" ] || { sudo "$0" "$@"; exit $?; }
+
+source "lib/distro.sh";
+source "lib/prepare.sh";
+source "lib/replacements.sh";
+
+sudo systemctl disable snapd.service
+sudo systemctl disable snapd.socket
+sudo systemctl disable snapd.seeded.service
+
+uninstall () {
+  echo "$1"|cut -d " " -f 1| while read app; do
+      echo "Removing $app";
+      sudo snap disable "$app";
+      prepare "$app";
+      sudo snap remove "$app" --purge;
+      replace "$app";
+  done;
+}
+
+if command -v snap &> /dev/null
+then
+  uninstall "$(snap list | tail --lines +2 | grep -v 'base\|core\|snapd')";
+  uninstall "$(snap list | tail --lines +2 | grep 'base')";
+  uninstall "$(snap list | tail --lines +2 | grep 'core')";
+  uninstall "$(snap list | tail --lines +2 | grep 'snapd')";
+  uninstall "$(snap list | tail --lines +2)";
+fi
+
+sudo apt autoremove --purge snapd
+
+cat << EOF | sudo tee /etc/apt/preferences.d/no-snap.pref >/dev/null
+Package: snapd
+Pin: release a=*
+Pin-Priority: -10
+EOF
+
+sudo chown root:root /etc/apt/preferences.d/no-snap.pref
+sudo rm -rf /snap /var/snap /var/lib/snapd /var/cache/snapd /usr/lib/snapd ~/snap
