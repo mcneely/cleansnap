@@ -3,6 +3,7 @@
 # Make sure script runs itself in sudo
 [ "$(id -u)" == "0" ] || { sudo "$0" "$@"; exit $?; }
 
+source  "lib/environment.sh"
 source "lib/distro.sh";
 source "lib/prepare.sh";
 source "lib/replacements.sh";
@@ -40,3 +41,7 @@ EOF
 
 sudo chown root:root /etc/apt/preferences.d/no-snap.pref
 sudo rm -rf /snap /var/snap /var/lib/snapd /var/cache/snapd /usr/lib/snapd ~/snap
+
+if [ "$(isGnome)" == "1" ]; then
+  sudo apt install --install-suggests gnome-software
+fi
