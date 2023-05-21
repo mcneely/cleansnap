@@ -13,7 +13,7 @@ replace () {
 installFirefox () {
   if [ "$(getDistroPackageManager)" == "apt" ]; then
     DISTRO=$(getDistro);
-    sudo cat << EOF | sudo /etc/apt/preferences.d/firefox.pref >/dev/null
+    sudo cat << EOF | sudo tee -a /etc/apt/preferences.d/firefox.pref >/dev/null
 Package: firefox*
 Pin: release o=$DISTRO*
 Pin-Priority: -1
